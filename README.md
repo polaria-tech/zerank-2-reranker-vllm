@@ -5,6 +5,9 @@ Conversion of [`zeroentropy/zerank-2-reranker`](https://huggingface.co/zeroentro
 `Qwen3ForSequenceClassification` checkpoint that vLLM serves on `/score` and `/rerank`
 without `--hf-overrides`, returning ZeroEntropy's calibrated 0-1 score `sigmoid(logit / 5)`.
 
+Converted checkpoint: [`polaria-tech/zerank-2-reranker-vllm`](https://huggingface.co/polaria-tech/zerank-2-reranker-vllm).
+Below, `./zerank-2-seq-cls` is the local output of `convert.py`.
+
 Scores are checked against the official `CrossEncoder.predict()` path (fp32 ground truth,
 bf16 noise floor) on vLLM 0.29.0 and 0.31.0, H100, from 19 to 38k tokens.
 
