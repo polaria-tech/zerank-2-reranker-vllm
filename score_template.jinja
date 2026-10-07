@@ -1,9 +1,17 @@
 {#- zerank-2 score template for vLLM (/score, /rerank).
     vLLM renders it with the messages [{"role": "query"}, {"role": "document"}]
     and WITHOUT add_generation_prompt, so the assistant suffix is emitted unconditionally.
-    Missing roles render as empty strings (vLLM's warmup calls the template without them). -#}
+    Missing roles render as empty strings (vLLM's warmup calls the template without them).
+    Without an instruction, the prompt is exactly the official zerank-2 prompt.
+    With vLLM's `instruction` request field (or chat_template_kwargs.instruction), the query
+    becomes <query>...</query>\n<instruction>...</instruction>, the format recommended by
+    ZeroEntropy for instruction-following. -#}
 {%- set query = messages | selectattr("role", "eq", "query") | map(attribute="content") | list -%}
 {%- set document = messages | selectattr("role", "eq", "document") | map(attribute="content") | list -%}
-{{- '<|im_start|>system\n' + (query[0] if query else '') + '<|im_end|>\n' -}}
+{%- set query = query[0] if query else '' -%}
+{%- if instruction is defined and instruction is string and instruction | trim -%}
+{%- set query = '<query>' + query + '</query>\n<instruction>' + instruction + '</instruction>' -%}
+{%- endif -%}
+{{- '<|im_start|>system\n' + query + '<|im_end|>\n' -}}
 {{- '<|im_start|>user\n' + (document[0] if document else '') + '<|im_end|>\n' -}}
 {{- '<|im_start|>assistant\n' -}}

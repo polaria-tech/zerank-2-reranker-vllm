@@ -82,6 +82,15 @@ Relevance is diluted in long documents, most when the relevant passage sits in t
 
 Ordering stays correct, but chunking long documents is advisable.
 
+## Instructions
+
+vLLM 0.29+ accepts an `instruction` field on `/score` and `/rerank` (folded into
+`chat_template_kwargs`), and only forwards it if the template references `instruction`.
+`score_template.jinja` renders it as `<query>{query}</query>\n<instruction>{instruction}</instruction>`
+in the system turn (ZeroEntropy's recommended format). Without an instruction (absent, null, empty
+or blank), the rendered prompt is byte-identical to the template used for the parity runs (checked
+on all reference pairs). The instruction path itself was not run against a live server.
+
 ## Truncation (`truncation.py`)
 
 Over-long document (48k tokens, max-model-len 40960). Identical on 0.29.0 and 0.31.0.
