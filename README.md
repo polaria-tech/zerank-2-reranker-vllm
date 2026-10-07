@@ -1,6 +1,7 @@
 # zerank-2 for vLLM
 
-Conversion of [`zeroentropy/zerank-2`](https://huggingface.co/zeroentropy/zerank-2) into a
+Conversion of [`zeroentropy/zerank-2-reranker`](https://huggingface.co/zeroentropy/zerank-2-reranker)
+(formerly `zeroentropy/zerank-2`, revision `5eae30d5`) into a
 `Qwen3ForSequenceClassification` checkpoint that vLLM serves on `/score` and `/rerank`
 without `--hf-overrides`, returning ZeroEntropy's calibrated 0-1 score `sigmoid(logit / 5)`.
 
@@ -28,5 +29,6 @@ breaks the score: [NOTES.md](NOTES.md).
 | `truncation.py` | truncation behaviour of `/score` and `/rerank` |
 | `bench.py` | latency/throughput benchmark, sentence-transformers vs vLLM |
 
-zerank-2 is © ZeroEntropy, released under Apache 2.0. This repository is not affiliated with
+zerank-2 is © ZeroEntropy, released under Apache 2.0 (relicensed on 2026-07-24; earlier
+revisions had a different license). This repository is not affiliated with
 ZeroEntropy. Code licensed under Apache 2.0 ([LICENSE](LICENSE)).
