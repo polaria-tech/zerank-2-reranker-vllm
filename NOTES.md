@@ -111,6 +111,8 @@ request stays "running" with no error and no GPU work until the client disconnec
 are still served). `max-model-len - 1` tokens works (1.4 s cold for 40959 tokens). It does not
 reproduce when the prompt's prefix is already in the prefix cache. `truncate_prompt_tokens=-1`
 truncates to exactly `max-model-len`, so it always hits this. Hence the strict `<` above.
+Reported independently as vllm-project/vllm#60067 and fixed by vllm-project/vllm#48039 (merged
+2026-10-07: pooling runners now reserve 0 sampled-token slots); not in 0.31.1rc0.
 
 ## What breaks the score
 
