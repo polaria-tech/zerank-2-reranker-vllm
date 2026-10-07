@@ -10,14 +10,19 @@ Raw logit (what `CrossEncoder.predict()` returns) = `5 * log(s / (1 - s))`.
 vllm serve ./zerank-2-seq-cls \
   --runner pooling \
   --dtype bfloat16 \
-  --chat-template ./zerank-2-seq-cls/score_template.jinja
+  --chat-template ./zerank-2-seq-cls/score_template.jinja \
+  --max-num-batched-tokens 65536 \
+  --gpu-memory-utilization 0.3
 ```
 
-No `--hf-overrides`. `--chat-template` is **required** (see below). Tested with vLLM 0.29.0 and
+No `--hf-overrides`. `--chat-template` is **required** (see below); the last two flags are the
+best H100 settings found (see "Benchmark"), optional for correctness. Tested with vLLM 0.29.0 and
 0.31.0, with the default `--max-model-len` (40960, the base model's limit) and with 16384.
+Prefix caching is on by default and should stay on.
 
 **Clients must truncate with `max_tokens_per_doc`, never with `truncate_prompt_tokens`**, and keep
-`query tokens + document tokens + 32 < max-model-len` (strictly less: see "Truncation").
+`query tokens + document tokens + 13 < max-model-len` (the template adds 13 tokens; strictly less:
+see "Truncation"). Long queries can be capped with `max_tokens_per_query`.
 
 ## Conversion (`convert.py`)
 
@@ -117,6 +122,46 @@ vLLM ≤ 0.31 ignores the checkpoint's `chat_template.jinja` for scoring (explic
 `/tokenize` does use it, so a passing `/tokenize` check does not prove `/score` is templated;
 `parity.py` also checks `usage.prompt_tokens` on every `/score` call for that reason.
 
+## Benchmark (`bench.py`, H100 80GB, vLLM 0.31.0, bf16)
+
+Workload: one rerank call = 1 query + 100 documents of 300–500 tokens (Python stdlib docs).
+"short" queries ~15 tokens, "long" queries ~300 tokens. Every request has a unique query, so the
+prefix cache only helps within a call (the query is shared by its 100 prompts), never across calls.
+tok/s counts all prompt tokens, including those served from the prefix cache. 32+ measured calls
+per cell after 3 warm-up calls.
+
+| engine / settings | query | concurrency | p50 latency | p95 latency | pairs/s | tok/s |
+|---|---|---|---|---|---|---|
+| ST `predict` bf16, batch 32 (best of 16–128) | short | 1 | 1.193 s | 1.230 s | 84 | 35.9k |
+| ST `predict` bf16, batch 32 | long | 1 | 1.866 s | 1.949 s | 53 | 38.3k |
+| vLLM defaults | short | 1 / 8 / 32 | 0.645 / 4.53 / 18.3 s | 0.659 / 4.64 / 18.4 s | 155 / 175 / 174 | 66.7k / 74.9k / 75.1k |
+| vLLM defaults | long | 1 / 8 / 32 | 0.717 / 4.66 / 18.9 s | 0.737 / 4.79 / 19.0 s | 139 / 168 / 169 | 99.9k / 120k / 121k |
+| vLLM `--no-enable-prefix-caching` | long | 1 / 8 / 32 | 1.110 / 7.91 / 31.8 s | 1.129 / 7.95 / 32.0 s | 90 / 101 / 101 | 64.4k / 72.1k / 72.2k |
+| **vLLM recommended** (`--max-num-batched-tokens 65536 --gpu-memory-utilization 0.3`) | short | 1 / 8 / 32 | **0.622** / 4.30 / 17.3 s | 0.639 / 4.32 / 18.1 s | 161 / **184** / 183 | 69.3k / 78.7k / 78.8k |
+| **vLLM recommended** | long | 1 / 8 / 32 | **0.689** / 4.40 / 17.7 s | 0.710 / 5.06 / 18.6 s | 145 / **177** / 177 | 104k / 127k / 127k |
+| vLLM offline `LLM.score`, one call at a time | short / long | 1 | 0.608 / 0.675 s | 0.623 / 0.686 s | 164 / 148 | 69.7k / 106k |
+| vLLM offline `LLM.score`, all calls at once | short / long | – | – | – | 169 / 155 | 72.1k / 111k |
+
+Findings:
+- vLLM is ~1.9x faster per call than `predict` (0.62 s vs 1.19 s) and ~2.2x (short queries) to
+  3.3x (long queries) higher throughput. ST's own batch size barely matters past 32.
+- The GPU saturates at concurrency ~8 (~180 pairs/s); beyond that, latency grows linearly with the
+  queue (c=32: ~18 s per call). Size concurrency on the client side to the latency budget.
+- **Prefix caching is supported** for this model in 0.29 and 0.31 (causal attention + LAST pooling;
+  `ModelConfig.is_prefix_caching_supported`) and on by default. No effect for short queries
+  (under one 16-token block); for ~300-token queries it cuts latency 35% and raises throughput 67%.
+  Parity passes with it on.
+- `--max-num-batched-tokens` (default 8192): 16k / 32k / 64k give +2% / +4% / +5% throughput and up
+  to -4% latency; peak activation memory goes from 0.95 GiB (8k) to 1.5 / 2.7 / 5.1 GiB.
+  Small but free.
+- `--gpu-memory-utilization 0.3` (~24 GiB reserved, 10.9 GiB KV cache ≈ 77k tokens) performs the same
+  as the default 0.92 (73 GiB). Below ~0.25 the KV cache could no longer hold one 40960-token
+  prompt (~147 KiB/token in bf16; computed, not tested).
+- HTTP + server overhead is ~2% at concurrency 1 (0.622 s vs 0.608 s offline). Offline "all at once"
+  is slower than the server at c=8: the server overlaps tokenization of queued calls with GPU work.
+- Memory: ST peak allocation 11–25 GiB depending on batch size (it materializes full-vocabulary
+  logits at every position); vLLM 7.8 GiB weights + 1–5 GiB activations + the KV cache you allow.
+
 ## Reproduce
 
 ```bash
@@ -130,6 +175,8 @@ hf download zeroentropy/zerank-2 --local-dir upstream
 .venv-031/bin/python parity.py
 .venv-031/bin/python parity.py --ref reference_long.json
 .venv-031/bin/python truncation.py             # currently fails: documents the issues above
+.venv-031/bin/python bench.py http --label vllm-recommended   # server up; `bench.py st` / `offline` with GPU free
+.venv-031/bin/python bench.py report
 ```
 
 Versions used: vLLM 0.31.0 / 0.29.0, torch 2.13.0+cu130, transformers 5.17 (0.31 venv) / 5.19

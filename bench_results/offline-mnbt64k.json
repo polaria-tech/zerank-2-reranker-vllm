@@ -1,0 +1,49 @@
+{
+ "engine": "offline",
+ "prefix_caching": true,
+ "max_num_batched_tokens": 65536,
+ "rows": [
+  {
+   "requests": 32,
+   "p50_s": 0.6082447065004999,
+   "p95_s": 0.6230337979995966,
+   "mean_s": 0.6090295789375375,
+   "wall_s": 19.488988776000042,
+   "pairs_per_s": 164.19528159104283,
+   "tokens_per_s": 69697.15133053639,
+   "engine": "offline",
+   "query": "short",
+   "concurrency": 1
+  },
+  {
+   "engine": "offline",
+   "query": "short",
+   "concurrency": "all-at-once",
+   "requests": 32,
+   "wall_s": 18.928670367999985,
+   "pairs_per_s": 169.0557201212498,
+   "tokens_per_s": 72056.93656675554
+  },
+  {
+   "requests": 32,
+   "p50_s": 0.674902444500276,
+   "p95_s": 0.6860134039998229,
+   "mean_s": 0.6751898850313296,
+   "wall_s": 21.606133533000502,
+   "pairs_per_s": 148.10609196284122,
+   "tokens_per_s": 105714.33322446952,
+   "engine": "offline",
+   "query": "long",
+   "concurrency": 1
+  },
+  {
+   "engine": "offline",
+   "query": "long",
+   "concurrency": "all-at-once",
+   "requests": 32,
+   "wall_s": 20.620851900999696,
+   "pairs_per_s": 155.18272549374473,
+   "tokens_per_s": 111212.3791495162
+  }
+ ]
+}
