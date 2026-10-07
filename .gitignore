@@ -1,0 +1,12 @@
+# Model weights and downloads
+upstream/
+zerank-2-seq-cls/
+*.safetensors
+
+# Large generated reference (rebuild with: python reference.py --set long)
+reference_long.json
+
+# Environments, caches, logs
+.venv*/
+__pycache__/
+*.log

@@ -1,0 +1,9 @@
+{#- zerank-2 score template for vLLM (/score, /rerank).
+    vLLM renders it with the messages [{"role": "query"}, {"role": "document"}]
+    and WITHOUT add_generation_prompt, so the assistant suffix is emitted unconditionally.
+    Missing roles render as empty strings (vLLM's warmup calls the template without them). -#}
+{%- set query = messages | selectattr("role", "eq", "query") | map(attribute="content") | list -%}
+{%- set document = messages | selectattr("role", "eq", "document") | map(attribute="content") | list -%}
+{{- '<|im_start|>system\n' + (query[0] if query else '') + '<|im_end|>\n' -}}
+{{- '<|im_start|>user\n' + (document[0] if document else '') + '<|im_end|>\n' -}}
+{{- '<|im_start|>assistant\n' -}}

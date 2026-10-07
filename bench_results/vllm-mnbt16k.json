@@ -1,0 +1,85 @@
+{
+ "engine": "http",
+ "server_args": "--max-num-batched-tokens 16384",
+ "server_memory": "7.81 GiB for consumed memory (weights + non-torch), 1.54 GiB for peak activation, and 0.12 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=67893894984` (63.23 GiB) to fit into requested memory, or `--kv-cache-memory=74142891520` (69.05 GiB) to fully utilize gpu memory. Current kv cache memory in use is 63.5 GiB.",
+ "rows": [
+  {
+   "requests": 32,
+   "p50_s": 0.6409779105006237,
+   "p95_s": 0.6606378959995709,
+   "mean_s": 0.6427054109688015,
+   "wall_s": 20.569187606000014,
+   "pairs_per_s": 155.5725029736499,
+   "tokens_per_s": 67047.81085266158,
+   "engine": "http",
+   "query": "short",
+   "concurrency": 1,
+   "gpu_used_mib": 76283
+  },
+  {
+   "requests": 32,
+   "p50_s": 4.41518769150025,
+   "p95_s": 4.638871272999495,
+   "mean_s": 4.001250993281303,
+   "wall_s": 17.850030425000114,
+   "pairs_per_s": 179.27140311862968,
+   "tokens_per_s": 76637.12427537733,
+   "engine": "http",
+   "query": "short",
+   "concurrency": 8,
+   "gpu_used_mib": 76283
+  },
+  {
+   "requests": 128,
+   "p50_s": 17.88864323250027,
+   "p95_s": 17.93213265600025,
+   "mean_s": 15.7627163989062,
+   "wall_s": 71.65903666899976,
+   "pairs_per_s": 178.62366834659636,
+   "tokens_per_s": 76955.83496987825,
+   "engine": "http",
+   "query": "short",
+   "concurrency": 32,
+   "gpu_used_mib": 76283
+  },
+  {
+   "requests": 32,
+   "p50_s": 0.7100759669997387,
+   "p95_s": 0.7243347899993751,
+   "mean_s": 0.7105003309688129,
+   "wall_s": 22.73874678700031,
+   "pairs_per_s": 140.72895177448535,
+   "tokens_per_s": 100775.78247672181,
+   "engine": "http",
+   "query": "long",
+   "concurrency": 1,
+   "gpu_used_mib": 76283
+  },
+  {
+   "requests": 32,
+   "p50_s": 4.537878638499933,
+   "p95_s": 4.7689346829993156,
+   "mean_s": 4.168909300468869,
+   "wall_s": 18.63164202900043,
+   "pairs_per_s": 171.750830926182,
+   "tokens_per_s": 123240.23810815922,
+   "engine": "http",
+   "query": "long",
+   "concurrency": 8,
+   "gpu_used_mib": 76283
+  },
+  {
+   "requests": 128,
+   "p50_s": 18.401572039500024,
+   "p95_s": 18.678021761999844,
+   "mean_s": 16.349634994515654,
+   "wall_s": 74.26159930599988,
+   "pairs_per_s": 172.36364580914486,
+   "tokens_per_s": 123848.42349142519,
+   "engine": "http",
+   "query": "long",
+   "concurrency": 32,
+   "gpu_used_mib": 76283
+  }
+ ]
+}
