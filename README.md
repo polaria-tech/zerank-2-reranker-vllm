@@ -6,6 +6,7 @@ Conversion of [`zeroentropy/zerank-2-reranker`](https://huggingface.co/zeroentro
 without `--hf-overrides`, returning ZeroEntropy's calibrated 0-1 score `sigmoid(logit / 5)`.
 
 Converted checkpoint: [`polaria-tech/zerank-2-reranker-vllm`](https://huggingface.co/polaria-tech/zerank-2-reranker-vllm).
+FP8 version: [`polaria-tech/zerank-2-reranker-vllm-fp8`](https://huggingface.co/polaria-tech/zerank-2-reranker-vllm-fp8).
 Below, `./zerank-2-seq-cls` is the local output of `convert.py`.
 
 Scores are checked against the official `CrossEncoder.predict()` path (fp32 ground truth,
@@ -25,6 +26,7 @@ breaks the score: [NOTES.md](NOTES.md).
 | file | purpose |
 |---|---|
 | `convert.py` | streaming conversion of the original checkpoint |
+| `quantize_fp8.py` | FP8 checkpoint (llm-compressor `FP8_DYNAMIC`, score head kept in fp32) |
 | `score_template.jinja` | score template to pass with `--chat-template` |
 | `reference.py` | reference scores from the official path (bf16 and fp32) |
 | `parity.py` | compares a running vLLM server against the reference; exits 1 on failure |
